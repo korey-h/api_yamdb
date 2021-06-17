@@ -1,9 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+from rest_framework.exceptions import ParseError
+from rest_framework.fields import EmailField
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.exceptions import ParseError
+
+from .models import User
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -30,3 +33,24 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
+
+class EmailSerializer(serializers.Serializer):
+    email = EmailField(required=True)
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        user = User.objects.filter(email=email)
+        if not user.exists():
+            raise ParseError(detail=f'Пользователя {email} не существует')
+        code = user[0]._gen_confirm_code()
+        attrs.update({'confirmation_code': code})
+        return attrs
+
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = ('first_name', 'last_name', 'username', 'bio',
+                  'email', 'role')
+        model = User

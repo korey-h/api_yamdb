@@ -13,6 +13,10 @@ class CustomUser(AbstractUser):
         ('admin', 'admin'),
         ('moderator', 'moderator')
     )
+    email = models.EmailField(
+        unique=True,
+        error_messages={'unique': ("A user with that email already exists.")}
+    )
     bio = models.TextField(max_length=250, null=True, blank=True)
     role = models.CharField(max_length=12,
                             choices=AUTH_USER_ROLES,
