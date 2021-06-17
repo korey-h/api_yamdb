@@ -1,5 +1,5 @@
 from django.core.mail import send_mail
-from rest_framework import status, permissions
+from rest_framework import filters, status, permissions
 from rest_framework.mixins import ListModelMixin, CreateModelMixin
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -45,3 +45,5 @@ class UsersView(GetPostViewSet):
     serializer_class = UserSerializer
     permission_classes = [IsAdmin, permissions.IsAuthenticated]
     queryset = User.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['username', ]
