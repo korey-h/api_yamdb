@@ -1,12 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.exceptions import ParseError
+from rest_framework.exceptions import ParseError, ValidationError
 from rest_framework.fields import EmailField
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import User
+from .models import Comment, Review, Title, User
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -54,3 +54,45 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('first_name', 'last_name', 'username', 'bio',
                   'email', 'role')
         model = User
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+
+    )
+    title = serializers.SlugRelatedField(
+        slug_field='id',
+        read_only=True
+    )
+
+    def validate(self, data):
+        if self.context['request'].method == 'POST':
+            author = self.context['request'].user
+            title = self.context['view'].kwargs['title_id']
+            review = Review.objects.filter(author=author, title=title)
+            if review:
+                raise ValidationError('Вы уже оставили свой отзыв')
+        return data
+
+    class Meta:
+        fields = ("id", "text", "author", "score", "pub_date", "title")
+        model = Review
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+
+    class Meta:
+        fields = ("id", "text", "author", "pub_date")
+        model = Comment
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ("id", "rating")
+        model = Title

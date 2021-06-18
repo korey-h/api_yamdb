@@ -29,3 +29,49 @@ class CustomUser(AbstractUser):
 
 
 User = get_user_model()
+
+
+class Title(models.Model):
+    rating = models.FloatField(default=0)
+
+
+class Review(models.Model):
+    CHOICES = (
+        (1, 'one'),
+        (2, 'two'),
+        (3, 'three'),
+        (4, 'four'),
+        (5, 'five'),
+        (6, 'six'),
+        (7, 'seven'),
+        (8, 'eight'),
+        (9, 'nine'),
+        (10, 'ten')
+    )
+    title = models.ForeignKey(Title, on_delete=models.CASCADE,
+                              related_name='reviews')
+    text = models.TextField()
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="reviews"
+    )
+    score = models.PositiveSmallIntegerField(choices=CHOICES)
+    pub_date = models.DateTimeField(
+        "Дата публикации", auto_now_add=True)
+
+    def __str__(self):
+        return self.text
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["title", "author"],
+                                    name="unique_reviewing"), ]
+
+
+class Comment(models.Model):
+    review = models.ForeignKey(Review, on_delete=models.CASCADE,
+                               related_name='comments')
+    text = models.TextField()
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="comments"
+    )
+    pub_date = models.DateTimeField("Дата добавления", auto_now_add=True)
