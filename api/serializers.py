@@ -54,3 +54,13 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('first_name', 'last_name', 'username', 'bio',
                   'email', 'role')
         model = User
+
+
+class PatchUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        extra_kwargs = {'username': {'required': False},
+                        'email': {'required': False}, }
+        fields = ('first_name', 'last_name', 'username', 'bio',
+                  'email', 'role')
+        model = User
