@@ -1,8 +1,17 @@
-from django.urls import path
-# from rest_framework.routers import DefaultRouter
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
 from . import views
 from .serializers import MyTokenObtainPairView
+
+router = DefaultRouter()
+router.register('categories', views.CategoriesView, basename='categories')
+router.register('titles', views.TitleViews, basename='titles')
+router.register(r"titles/(?P<title_id>[^\/.]+)/reviews",
+                views.ReviewViewSet, basename="review")
+router.register(
+    r"titles/(?P<title_id>[^/.]+)/reviews/(?P<review_id>[^/.]+)/comments",
+    views.CommentViewSet, basename="comment")
 
 urlpatterns = [
     path('v1/token/', MyTokenObtainPairView.as_view(),
@@ -17,5 +26,17 @@ urlpatterns = [
     path('v1/users/', views.UsersView.as_view(
         {'get': 'list', 'post': 'create'})
     ),
-
+    path('v1/genres/<str:slug>/', views.DeleteGenreViews.as_view(
+        {'delete': 'destroy', })
+    ),
+    path('v1/genres/', views.GenreViews.as_view(
+        {'get': 'list', 'post': 'create'})
+    ),
+    path('v1/categories/<str:slug>/', views.DeleteCategoryViews.as_view(
+        {'delete': 'destroy'})
+    ),
+    path('v1/categories/', views.CategoriesView.as_view(
+        {'get': 'list', 'post': 'create'})
+    ),
+    path('v1/', include(router.urls)),
 ]
