@@ -6,22 +6,15 @@ from rest_framework.mixins import *
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.exceptions import PermissionDenied
 
 from .models import Categories, Genres, Review, Titles, User
-from .permissions import IsAdmin, IsOwnerOrAdminOrModeratorOrReadOnly, IsAdminOrReadOnly
+from .permissions import (IsAdmin, IsOwnerOrAdminOrModeratorOrReadOnly,
+                          IsAdminOrReadOnly)
 from .serializers import (
     CommentSerializer, CategoriesSerializer, EmailSerializer,
     GenresSerializer, PatchUserSerializer,
     ReviewSerializer, TitlesSerializer, UserSerializer)
-
-
-# class CreateListRetrieveViews(CreateModelMixin,
-#                               ListModelMixin,
-#                               RetrieveModelMixin,
-#                               GenericViewSet):
-#     pass
 
 
 class DestroyViews(DestroyModelMixin,
@@ -128,20 +121,6 @@ class TitleViews(ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsAdminOrReadOnly]
     pagination_class = pagination.PageNumberPagination
-
-
-class ConcreteTitleViews(ListModelMixin,
-                         DestroyModelMixin,
-                         RetrieveModelMixin,
-                         UpdateModelMixin,
-                         GenericViewSet):
-    serializer_class = TitlesSerializer
-    permission_classes = []
-    pagination_class = pagination.PageNumberPagination
-
-    def get_queryset(self):
-        title = get_object_or_404(Titles, pk=self.kwargs['title_id'])
-        return title
 
 
 class ReviewViewSet(ModelViewSet):

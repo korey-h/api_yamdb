@@ -90,7 +90,7 @@ class TitlesSerializer(serializers.ModelSerializer):
         extra_kwargs = {'name': {'required': True}, }
 
     def create(self, validated_data):
-        print('>>>>>>>>>>>', validated_data) # к этому моменту пропадают из набора данных genre и category
+        print('>>>>>>>>>>>', validated_data)  # к этому моменту genre и category пропадают из набора данных 
         genres_data = validated_data.pop('genre', None)
         category_data = validated_data.pop('category', None)
         titles = Titles.objects.create(**validated_data)
