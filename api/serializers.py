@@ -81,8 +81,8 @@ class GenresSerializer(serializers.ModelSerializer):
 
 
 class TitlesSerializer(serializers.ModelSerializer):
-    category = CategoriesSerializer(default=None, )
-    genre = GenresSerializer(many=True, default=None, )
+    category = CategoriesSerializer(required=False)
+    genre = GenresSerializer(many=True, required=False)
 
     class Meta:
         fields = '__all__'
@@ -90,7 +90,8 @@ class TitlesSerializer(serializers.ModelSerializer):
         extra_kwargs = {'name': {'required': True}, }
 
     def create(self, validated_data):
-        print('>>>>>>>>>>>', validated_data)  # к этому моменту genre и category пропадают из набора данных 
+        print('self.data>>>>>>>>>>>', self.data)
+        print('validated_data>>>>>>>>>>>', validated_data)  # к этому моменту genre и category пропадают из набора данных 
         genres_data = validated_data.pop('genre', None)
         category_data = validated_data.pop('category', None)
         titles = Titles.objects.create(**validated_data)
