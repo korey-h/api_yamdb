@@ -42,6 +42,7 @@ def create_categories(user_client):
         'slug': 'books'
     }
     user_client.post('/api/v1/categories/', data=data2)
+    print('тестовые категории',data1, data2)
     return [data1, data2]
 
 
