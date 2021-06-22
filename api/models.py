@@ -43,13 +43,13 @@ class Genres(models.Model):
 
 class Titles(models.Model):
     name = models.TextField()
-    year = models.PositiveSmallIntegerField()
+    year = models.PositiveSmallIntegerField(null=True, blank=True)
     category = models.ForeignKey(Categories, on_delete=models.CASCADE,
                                  null=True, blank=True, related_name="titles")
     genre = models.ManyToManyField(Genres,
                                    null=True, blank=True,
                                    related_name="genres")
-    description = models.TextField()
+    description = models.TextField(null=True, blank=True)
     rating = models.FloatField(default=None, null=True, blank=True, )
 
 

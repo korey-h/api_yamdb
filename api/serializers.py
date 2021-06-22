@@ -104,6 +104,9 @@ class TitlesSerializer(serializers.ModelSerializer):
 
         return title
 
+    def update(self, instance, validated_data):
+        self.create(validated_data)
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(

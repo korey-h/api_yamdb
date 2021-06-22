@@ -1,13 +1,16 @@
+import django_filters
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, status, pagination, permissions
-from rest_framework.mixins import *
+from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
+                                   ListModelMixin)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework.exceptions import PermissionDenied
 
+from .filters import TitleFilter
 from .models import Categories, Genres, Review, Titles, User
 from .permissions import (IsAdmin, IsOwnerOrAdminOrModeratorOrReadOnly,
                           IsAdminOrReadOnly)
@@ -116,11 +119,12 @@ class DeleteGenreViews(ModelViewSet):
 
 class TitleViews(ModelViewSet):
     queryset = Titles.objects.all()
-    http_method_names = ['get', 'post', 'delete']
+    http_method_names = ['get', 'post', 'patch', 'delete']
     serializer_class = TitlesSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsAdminOrReadOnly]
     pagination_class = pagination.PageNumberPagination
+    filterset_class = TitleFilter
 
 
 class ReviewViewSet(ModelViewSet):
