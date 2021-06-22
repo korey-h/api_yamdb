@@ -17,7 +17,8 @@ from .permissions import (IsAdmin, IsOwnerOrAdminOrModeratorOrReadOnly,
 from .serializers import (
     CommentSerializer, CategoriesSerializer, EmailSerializer,
     GenresSerializer, PatchUserSerializer,
-    ReviewSerializer, TitlesSerializer, UserSerializer)
+    ReviewSerializer, TitlesDetailSerializer, TitlesCreateSerializer,
+    UserSerializer)
 
 
 class DestroyViews(DestroyModelMixin,
@@ -120,12 +121,16 @@ class DeleteGenreViews(ModelViewSet):
 class TitleViews(ModelViewSet):
     queryset = Titles.objects.all()
     http_method_names = ['get', 'post', 'patch', 'delete']
-    serializer_class = TitlesSerializer
+    serializer_class = TitlesDetailSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsAdminOrReadOnly]
     pagination_class = pagination.PageNumberPagination
     filterset_class = TitleFilter
 
+    def get_serializer_class(self):
+        if self.request.method in ['POST', 'PATCH']:
+            return TitlesCreateSerializer
+        return self.serializer_class
 
 class ReviewViewSet(ModelViewSet):
     serializer_class = ReviewSerializer
