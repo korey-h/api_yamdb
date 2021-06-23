@@ -47,10 +47,10 @@ class Titles(models.Model):
     category = models.ForeignKey(Categories, on_delete=models.CASCADE,
                                  null=True, blank=True, related_name="titles")
     genre = models.ManyToManyField(Genres,
-                                   null=True, blank=True,
-                                   related_name="genres")
+                                   blank=True,
+                                   related_name="titles")
     description = models.TextField()
-    rating = models.FloatField(default=None, null=True, blank=True, )
+    rating = models.FloatField(default=None, null=True, blank=True)
 
 
 class Review(models.Model):

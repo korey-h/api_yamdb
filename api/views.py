@@ -1,27 +1,21 @@
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, status, pagination, permissions
+from rest_framework import filters, pagination, permissions, status
 from rest_framework.mixins import *
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.exceptions import PermissionDenied
 
+from .filters import TitleFilter
 from .models import Categories, Genres, Review, Titles, User
-from .permissions import IsAdmin, IsOwnerOrAdminOrModeratorOrReadOnly, IsAdminOrReadOnly
-from .serializers import (
-    CommentSerializer, CategoriesSerializer, EmailSerializer,
-    GenresSerializer, PatchUserSerializer,
-    ReviewSerializer, TitlesSerializer, UserSerializer)
-
-
-# class CreateListRetrieveViews(CreateModelMixin,
-#                               ListModelMixin,
-#                               RetrieveModelMixin,
-#                               GenericViewSet):
-#     pass
+from .permissions import (IsAdmin, IsAdminOrReadOnly,
+                          IsOwnerOrAdminOrModeratorOrReadOnly)
+from .serializers import (CategoriesSerializer, CommentSerializer,
+                          EmailSerializer, GenresSerializer,
+                          PatchUserSerializer, ReviewSerializer,
+                          TitlesReadSerializer, TitlesSerializer,
+                          UserSerializer)
 
 
 class DestroyViews(DestroyModelMixin,
@@ -121,13 +115,20 @@ class DeleteGenreViews(ModelViewSet):
     lookup_url_kwarg = 'slug'
 
 
-class TitleViews(ModelViewSet):
+class TitlesView(ModelViewSet):
     queryset = Titles.objects.all()
-    http_method_names = ['get', 'post', 'delete']
-    serializer_class = TitlesSerializer
+    serializer_class = TitlesReadSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsAdminOrReadOnly]
     pagination_class = pagination.PageNumberPagination
+    filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        if self.request.method in ['POST', 'PATCH', ]:
+            print("Were in the POST")
+            return TitlesSerializer
+        print("Were in the GET")
+        return self.serializer_class
 
 
 class ConcreteTitleViews(ListModelMixin,

@@ -80,27 +80,27 @@ class GenresSerializer(serializers.ModelSerializer):
         model = Genres
 
 
-class TitlesSerializer(serializers.ModelSerializer):
-    category = CategoriesSerializer(default=None, )
-    genre = GenresSerializer(many=True, default=None, )
+class TitlesReadSerializer(serializers.ModelSerializer):
+    category = CategoriesSerializer(read_only=True)
+    genre = GenresSerializer(many=True, read_only=True)
 
     class Meta:
-        fields = '__all__'
+        fields = ['id', 'name', 'year', 'category', 'genre', 'description',
+                  'rating']
         model = Titles
-        extra_kwargs = {'name': {'required': True}, }
 
-    def create(self, validated_data):
-        print('>>>>>>>>>>>', validated_data) # к этому моменту пропадают из набора данных genre и category
-        genres_data = validated_data.pop('genre', None)
-        category_data = validated_data.pop('category', None)
-        titles = Titles.objects.create(**validated_data)
-        if genres_data:
-            for genre_data in genres_data:
-                Genres.objects.create(genres=titles, **genre_data)
 
-        if category_data:
-            Categories.objects.create(titles=titles, **category_data)
-        return titles
+class TitlesSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(queryset=Categories.objects.all(),
+                                            slug_field='slug')
+    genre = serializers.SlugRelatedField(many=True,
+                                         queryset=Genres.objects.all(),
+                                         slug_field='slug')
+
+    class Meta:
+        fields = ['id', 'name', 'year', 'category', 'genre', 'description',
+                  'rating']
+        model = Titles
 
 
 class ReviewSerializer(serializers.ModelSerializer):

@@ -6,7 +6,7 @@ from .serializers import MyTokenObtainPairView
 
 router = DefaultRouter()
 router.register('categories', views.CategoriesView, basename='categories')
-router.register('titles', views.TitleViews, basename='titles')
+router.register('titles', views.TitlesView, basename='titles')
 router.register(r"titles/(?P<title_id>[^\/.]+)/reviews",
                 views.ReviewViewSet, basename="review")
 router.register(
