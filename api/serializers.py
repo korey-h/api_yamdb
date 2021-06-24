@@ -81,8 +81,8 @@ class GenresSerializer(serializers.ModelSerializer):
 
 
 class TitlesDetailSerializer(serializers.ModelSerializer):
-    category = CategoriesSerializer(read_only=False, required=False)
-    genre = GenresSerializer(many=True, read_only=False, required=False)
+    category = CategoriesSerializer()
+    genre = GenresSerializer(many=True, )
 
     class Meta:
         fields = '__all__'
@@ -90,11 +90,11 @@ class TitlesDetailSerializer(serializers.ModelSerializer):
 
 
 class TitlesCreateSerializer(serializers.ModelSerializer):
-    category = serializers.SlugRelatedField(read_only=False, required=False, 
-                                            slug_field='slug', queryset=Categories.objects.all())
-
-    genre = serializers.SlugRelatedField(many=True, read_only=False, required=False,
-                                         slug_field='slug', queryset=Genres.objects.all())
+    category = serializers.CharField(required=False)
+    genre = serializers.ListField(
+        child=serializers.CharField(),
+        allow_empty=True,
+    )
 
     class Meta:
         fields = '__all__'
@@ -103,41 +103,42 @@ class TitlesCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         genres_data = validated_data.pop('genre', None)
-        genres_data = self.initial_data.get('genre')
-        category_slug = self.initial_data.get('category')
-
+        category_slug = validated_data.pop('category', None)
         title = Titles.objects.create(**validated_data)
-        if category_slug:
+        if category_slug and category_slug != '':
             category = Categories.objects.get(slug=category_slug)
             title.category = category
 
-        for slug in genres_data:
-            genre = Genres.objects.get(slug=slug)
-            title.genre.add(genre)
+        if genres_data and genres_data != []:
+            genres = []
+            for genre_slug in genres_data:
+                genre = Genres.objects.get_or_create(slug=genre_slug)
+                genres.append(genre[0])
+            title.genre.set(genres)
             title.save()
-
         return title
 
     def update(self, instance, validated_data):
-        print('instance>>>>', instance)
-        genres_data = validated_data.pop('genre', None)
-        genres_data = self.initial_data.get('genre')
-        category_slug = self.initial_data.get('category')
-        for field, value in validated_data.items():
-            setattr(instance, field, value)
+        genres_data = validated_data.get('genre', None)
+        category_slug = validated_data.get('category', None)
 
         if genres_data and genres_data != []:
-            for slug in genres_data:
-                genre = Genres.objects.get(slug=slug)
-                instance.genre.add(genre)
-                instance.save()
+            genres = []
+            for genre_slug in genres_data:
+                genre = Genres.objects.get_or_create(slug=genre_slug)
+                genres.append(genre[0])
+            validated_data['genre'] = genres
 
         if category_slug and category_slug != '':
-            print('category_slug>>>>', category_slug)
-            category = Categories.objects.get(slug=category_slug)
-            instance.category = category
+            category = Categories.objects.get_or_create(slug=category_slug)
+            validated_data['category'] = category[0]
 
-        return instance
+        return super().update(instance, validated_data)
+
+    def to_representation(self, obj):
+        self.fields['category'] = CategoriesSerializer()
+        self.fields['genre'] = GenresSerializer(many=True)
+        return super(TitlesCreateSerializer, self).to_representation(obj)
 
 
 class ReviewSerializer(serializers.ModelSerializer):

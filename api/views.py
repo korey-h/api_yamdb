@@ -1,4 +1,3 @@
-import django_filters
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
@@ -8,7 +7,6 @@ from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
-from rest_framework.exceptions import PermissionDenied
 
 from .filters import TitleFilter
 from .models import Categories, Genres, Review, Titles, User
@@ -131,6 +129,7 @@ class TitleViews(ModelViewSet):
         if self.request.method in ['POST', 'PATCH']:
             return TitlesCreateSerializer
         return self.serializer_class
+
 
 class ReviewViewSet(ModelViewSet):
     serializer_class = ReviewSerializer
