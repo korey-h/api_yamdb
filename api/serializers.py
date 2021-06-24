@@ -90,50 +90,16 @@ class TitlesDetailSerializer(serializers.ModelSerializer):
 
 
 class TitlesCreateSerializer(serializers.ModelSerializer):
-    category = serializers.CharField(required=False)
-    genre = serializers.ListField(
-        child=serializers.CharField(),
-        allow_empty=True,
-    )
+    category = serializers.SlugRelatedField(queryset=Categories.objects.all(),
+                                            slug_field='slug')
+    genre = serializers.SlugRelatedField(many=True,
+                                         queryset=Genres.objects.all(),
+                                         slug_field='slug')
 
     class Meta:
         fields = '__all__'
         model = Titles
         extra_kwargs = {'name': {'required': True}, }
-
-    def create(self, validated_data):
-        genres_data = validated_data.pop('genre', None)
-        category_slug = validated_data.pop('category', None)
-        title = Titles.objects.create(**validated_data)
-        if category_slug and category_slug != '':
-            category = Categories.objects.get(slug=category_slug)
-            title.category = category
-
-        if genres_data and genres_data != []:
-            genres = []
-            for genre_slug in genres_data:
-                genre = Genres.objects.get_or_create(slug=genre_slug)
-                genres.append(genre[0])
-            title.genre.set(genres)
-            title.save()
-        return title
-
-    def update(self, instance, validated_data):
-        genres_data = validated_data.get('genre', None)
-        category_slug = validated_data.get('category', None)
-
-        if genres_data and genres_data != []:
-            genres = []
-            for genre_slug in genres_data:
-                genre = Genres.objects.get_or_create(slug=genre_slug)
-                genres.append(genre[0])
-            validated_data['genre'] = genres
-
-        if category_slug and category_slug != '':
-            category = Categories.objects.get_or_create(slug=category_slug)
-            validated_data['category'] = category[0]
-
-        return super().update(instance, validated_data)
 
     def to_representation(self, obj):
         self.fields['category'] = CategoriesSerializer()
