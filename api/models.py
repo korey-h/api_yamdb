@@ -48,14 +48,22 @@ class Genres(models.Model):
 class Titles(models.Model):
     name = models.TextField(verbose_name='Название произведения')
     year = models.PositiveSmallIntegerField(null=True, blank=True)
-    category = models.ForeignKey(Categories, on_delete=models.CASCADE,
-                                 null=True, blank=True, related_name='titles')
-    genre = models.ManyToManyField(Genres,
-                                   blank=True,
-                                   related_name='genres')
-    description = models.TextField(null=True, blank=True,
-                                   verbose_name='Описание')
-    rating = models.FloatField(default=None, null=True, blank=True, )
+    category = models.ForeignKey(
+        Categories,
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name='titles'
+    )
+    genre = models.ManyToManyField(
+        Genres,
+        blank=True,
+        related_name='genres'
+    )
+    description = models.TextField(
+        null=True, blank=True,
+        verbose_name='Описание'
+    )
+    # rating = models.FloatField(default=None, null=True, blank=True, )
 
 
 class Review(models.Model):

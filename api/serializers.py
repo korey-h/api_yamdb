@@ -66,7 +66,7 @@ class TitlesSerializer(serializers.ModelSerializer):
                                          slug_field='slug')
 
     class Meta:
-        fields = '__all__'
+        fields = ['name', 'year', 'category', 'genre', 'description', ]
         model = Titles
         extra_kwargs = {'name': {'required': True}, }
 

@@ -110,7 +110,7 @@ class GenreViews(ModelViewSet):
 
 
 class TitleViews(ModelViewSet):
-    queryset = Titles.objects.all()
+    queryset = Titles.objects.annotate(rating=Avg('reviews__score'))
     http_method_names = ['get', 'post', 'patch', 'delete']
     serializer_class = TitlesSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
@@ -128,16 +128,16 @@ class ReviewViewSet(ModelViewSet):
     def perform_create(self, serializer):
         title = get_object_or_404(Titles, id=self.kwargs['title_id'])
         serializer.save(title=title, author=self.request.user)
-        # пересчитываем и сохраняем рейтинг после сохранения отзыва
-        title.rating = title.reviews.aggregate(Avg('score'))['score__avg']
-        title.save(update_fields=['rating', ])
+        # # пересчитываем и сохраняем рейтинг после сохранения отзыва
+        # title.rating = title.reviews.aggregate(Avg('score'))['score__avg']
+        # title.save(update_fields=['rating', ])
 
     def perform_update(self, serializer):
         title = get_object_or_404(Titles, id=self.kwargs['title_id'])
         serializer.save(title=title, author=self.request.user)
-        # пересчитываем и сохраняем рейтинг после сохранения отзыва
-        title.rating = title.reviews.aggregate(Avg('score'))['score__avg']
-        title.save(update_fields=['rating', ])
+        # # пересчитываем и сохраняем рейтинг после сохранения отзыва
+        # title.rating = title.reviews.aggregate(Avg('score'))['score__avg']
+        # title.save(update_fields=['rating', ])
 
     def get_queryset(self):
         title = get_object_or_404(Titles, id=self.kwargs['title_id'])
