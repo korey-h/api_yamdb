@@ -4,39 +4,21 @@ from rest_framework.routers import DefaultRouter
 from . import views
 from .serializers import MyTokenObtainPairView
 
-router = DefaultRouter()
-router.register('categories', views.CategoriesView, basename='categories')
-router.register('titles', views.TitleViews, basename='titles')
-router.register(r"titles/(?P<title_id>[^\/.]+)/reviews",
-                views.ReviewViewSet, basename="review")
-router.register(
+router_v1 = DefaultRouter()
+router_v1.register('categories', views.CategoriesView, basename='categories')
+router_v1.register('genres', views.GenreViews, basename='genres')
+router_v1.register('titles', views.TitleViews, basename='titles')
+router_v1.register(r"titles/(?P<title_id>[^\/.]+)/reviews",
+                   views.ReviewViewSet, basename="review")
+router_v1.register(
     r"titles/(?P<title_id>[^/.]+)/reviews/(?P<review_id>[^/.]+)/comments",
     views.CommentViewSet, basename="comment")
+router_v1.register('users', views.UserView, basename='users')
+
 
 urlpatterns = [
-    path('v1/token/', MyTokenObtainPairView.as_view(),
+    path('v1/auth/token/', MyTokenObtainPairView.as_view(),
          name='token_obtain_pair'),
     path('v1/auth/email/', views.SendConfirmEmailView.as_view()),
-    path('v1/users/me/', views.EditSelfView.as_view(
-        {'get': 'retrieve', 'patch': 'update'})
-    ),
-    path('v1/users/<str:username>/', views.EditUserView.as_view(
-        {'get': 'retrieve', 'patch': 'update', 'delete': 'destroy'})
-    ),
-    path('v1/users/', views.UsersView.as_view(
-        {'get': 'list', 'post': 'create'})
-    ),
-    path('v1/genres/<str:slug>/', views.DeleteGenreViews.as_view(
-        {'delete': 'destroy', })
-    ),
-    path('v1/genres/', views.GenreViews.as_view(
-        {'get': 'list', 'post': 'create'})
-    ),
-    path('v1/categories/<str:slug>/', views.DeleteCategoryViews.as_view(
-        {'delete': 'destroy'})
-    ),
-    path('v1/categories/', views.CategoriesView.as_view(
-        {'get': 'list', 'post': 'create'})
-    ),
-    path('v1/', include(router.urls)),
+    path('v1/', include(router_v1.urls)),
 ]
