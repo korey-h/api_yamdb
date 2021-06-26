@@ -18,7 +18,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         self.fields.pop('password')
 
     def validate(self, attrs):
-        self.user = get_object_or_404(get_user_model(),
+        self.user = get_object_or_404(User,
                                       email=attrs[self.username_field])
         data = {}
 
@@ -37,15 +37,6 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 class EmailSerializer(serializers.Serializer):
     email = EmailField(required=True)
-
-    def validate(self, attrs):
-        email = attrs.get('email')
-        user = User.objects.filter(email=email)
-        if not user.exists():
-            raise ParseError(detail=f'Пользователя {email} не существует')
-        code = user[0]._gen_confirm_code()
-        attrs.update({'confirmation_code': code})
-        return attrs
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -128,7 +119,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         return data
 
     class Meta:
-        fields = ("id", "text", "author", "score", "pub_date", "title")
+        fields = '__all__'
         model = Review
 
 
@@ -139,5 +130,5 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ("id", "text", "author", "pub_date")
+        exclude = ['review', ]
         model = Comment
