@@ -21,13 +21,10 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         self.user = get_object_or_404(User,
                                       email=attrs[self.username_field])
         data = {}
-
         if not self.user._gen_confirm_code() == attrs['confirmation_code']:
             raise ParseError(detail='Confirmation code is wrong or expired.')
-
         refresh = super().get_token(self.user)
         data['token'] = str(refresh.access_token)
-
         return data
 
 
@@ -47,16 +44,6 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
 
 
-class PatchUserSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        extra_kwargs = {'username': {'required': False},
-                        'email': {'required': False}, }
-        fields = ('first_name', 'last_name', 'username', 'bio',
-                  'email', 'role')
-        model = User
-
-
 class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -71,16 +58,7 @@ class GenresSerializer(serializers.ModelSerializer):
         model = Genres
 
 
-class TitlesDetailSerializer(serializers.ModelSerializer):
-    category = CategoriesSerializer()
-    genre = GenresSerializer(many=True, )
-
-    class Meta:
-        fields = '__all__'
-        model = Titles
-
-
-class TitlesCreateSerializer(serializers.ModelSerializer):
+class TitlesSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(queryset=Categories.objects.all(),
                                             slug_field='slug')
     genre = serializers.SlugRelatedField(many=True,
@@ -95,14 +73,13 @@ class TitlesCreateSerializer(serializers.ModelSerializer):
     def to_representation(self, obj):
         self.fields['category'] = CategoriesSerializer()
         self.fields['genre'] = GenresSerializer(many=True)
-        return super(TitlesCreateSerializer, self).to_representation(obj)
+        return super().to_representation(obj)
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True
-
     )
     title = serializers.SlugRelatedField(
         slug_field='id',

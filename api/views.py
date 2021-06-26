@@ -4,6 +4,7 @@ from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, pagination, permissions, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
@@ -14,8 +15,7 @@ from .permissions import (IsAdmin, IsOwnerOrAdminOrModeratorOrReadOnly,
                           IsAdminOrReadOnly)
 from .serializers import (
     CommentSerializer, CategoriesSerializer, EmailSerializer,
-    GenresSerializer, PatchUserSerializer,
-    ReviewSerializer, TitlesDetailSerializer, TitlesCreateSerializer,
+    GenresSerializer, ReviewSerializer, TitlesSerializer,
     UserSerializer)
 
 
@@ -49,7 +49,7 @@ class SendConfirmEmailView(APIView):
 
 
 class UserView(ModelViewSet):
-    serializer_class = PatchUserSerializer
+    serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated, IsAdmin, ]
     queryset = User.objects.all()
     lookup_field = 'username'
@@ -58,39 +58,24 @@ class UserView(ModelViewSet):
     search_fields = ['username', ]
     pagination_class = pagination.PageNumberPagination
 
-    def personal_info(self):
-        username = self.kwargs.get('username', None)
-        return username and (username == 'me')
+    @action(detail=False, methods=['get', 'patch'],
+            permission_classes=[permissions.IsAuthenticated, ])
+    def me(self, request):
+        if request.method == 'GET':
+            serializer = UserSerializer(self.request.user)
+            return Response(serializer.data)
 
-    def _allowed_methods(self):
-        if self.personal_info():
-            self.http_method_names = ['get', 'patch']
-        return super()._allowed_methods()
-
-    def get_permissions(self):
-        if self.personal_info():
-            return [permissions.IsAuthenticated(), ]
-        return [permission() for permission in self.permission_classes]
-
-    def get_serializer_class(self):
-        if self.kwargs == {}:
-            return UserSerializer
-        return self.serializer_class
-
-    def get_object(self):
-        if self.personal_info():
-            return self.request.user
-        return super().get_object()
-
-    def perform_update(self, serializer):
-        if self.personal_info():
-            serializer.validated_data['role'] = self.request.user.role
+        serializer = UserSerializer(self.request.user, data=request.data,
+                                    partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.validated_data['role'] = self.request.user.role
         serializer.save()
+        return Response(serializer.data)
 
 
 class CategoriesView(ModelViewSet):
     queryset = Categories.objects.all()
-    http_method_names = ['delete', 'get', 'post', ]
+    http_method_names = ['get', 'post', ]
     serializer_class = CategoriesSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsAdminOrReadOnly]
@@ -127,16 +112,11 @@ class GenreViews(ModelViewSet):
 class TitleViews(ModelViewSet):
     queryset = Titles.objects.all()
     http_method_names = ['get', 'post', 'patch', 'delete']
-    serializer_class = TitlesDetailSerializer
+    serializer_class = TitlesSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsAdminOrReadOnly]
     pagination_class = pagination.PageNumberPagination
     filterset_class = TitleFilter
-
-    def get_serializer_class(self):
-        if self.request.method in ['POST', 'PATCH']:
-            return TitlesCreateSerializer
-        return self.serializer_class
 
 
 class ReviewViewSet(ModelViewSet):
