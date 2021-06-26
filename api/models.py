@@ -1,11 +1,12 @@
-import jwt.api_jwt
-
 from datetime import datetime, timedelta
-from django.contrib.auth import get_user_model
+
+import jwt.api_jwt
+from api_yamdb import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from api_yamdb import settings
+
+from .validators import validate_year
 
 
 class Roles(models.TextChoices):
@@ -22,18 +23,17 @@ class CustomUser(AbstractUser):
     )
     bio = models.TextField(max_length=250, null=True, blank=True,
                            verbose_name='Информация о себе')
-    role = models.CharField(max_length=12,
-                            choices=Roles.choices,
-                            default='user',
-                            verbose_name='Уровень прав пользователя')
+    role = models.CharField(
+        max_length=12,
+        choices=Roles.choices,
+        default='user',
+        verbose_name='Уровень прав пользователя'
+    )
 
     def _gen_confirm_code(self):
         dt = datetime.now() + timedelta(days=1)
         return jwt.encode(payload={'id': self.pk, 'exp': dt.toordinal()},
                           key=settings.SECRET_KEY, algorithm='HS256')
-
-
-User = get_user_model()
 
 
 class Categories(models.Model):
@@ -48,23 +48,28 @@ class Genres(models.Model):
 
 class Titles(models.Model):
     name = models.TextField(verbose_name='Название произведения')
-    year = models.PositiveSmallIntegerField(null=True, blank=True)
+    year = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[validate_year],
+        verbose_name='Год издания'
+    )
     category = models.ForeignKey(
         Categories,
         on_delete=models.CASCADE,
         null=True, blank=True,
-        related_name='titles'
+        related_name='titles',
+        verbose_name='Категория'
     )
     genre = models.ManyToManyField(
         Genres,
         blank=True,
-        related_name='genres'
+        related_name='genres',
+        verbose_name='Жанр'
     )
     description = models.TextField(
         null=True, blank=True,
         verbose_name='Описание'
     )
-    # rating = models.FloatField(default=None, null=True, blank=True, )
 
 
 class Review(models.Model):
@@ -77,7 +82,7 @@ class Review(models.Model):
     )
     text = models.TextField(verbose_name='Отзыв')
     author = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.CASCADE,
         related_name='reviews',
         verbose_name=' Автор отзыва'
@@ -112,7 +117,7 @@ class Comment(models.Model):
     )
     text = models.TextField(verbose_name='Комментарий')
     author = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.CASCADE,
         related_name='comments',
         verbose_name='Автор комментария'

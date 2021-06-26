@@ -1,7 +1,10 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Categories, Comment, Genres, Review, Titles, User
+from .models import Categories, Comment, Genres, Review, Titles
+
+User = get_user_model()
 
 
 class MyUserAdmin(UserAdmin):

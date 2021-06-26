@@ -21,7 +21,6 @@ class Test06CommentAPI:
     def create_comment(self, client_user, title_id, review_id, text):
         data = {'text': text}
         response = client_user.post(f'/api/v1/titles/{title_id}/reviews/{review_id}/comments/', data=data)
-        print(response.json())
         assert response.status_code == 201, (
             'Проверьте, что при POST запросе `/api/v1/titles/{title_id}/reviews/{review_id}/comments/` '
             'с правильными данными возвращает статус 201, api доступен для любого аутентифицированные пользователя'

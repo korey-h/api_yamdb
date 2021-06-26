@@ -139,7 +139,6 @@ class Test04TitleAPI:
     @pytest.mark.django_db(transaction=True)
     def test_03_titles_detail(self, client, user_client):
         titles, categories, genres = create_titles(user_client)
-        print('исходные данные',titles[0]["id"])
         response = client.get(f'/api/v1/titles/{titles[0]["id"]}/')
         assert response.status_code != 404, (
             'Страница `/api/v1/titles/{title_id}/` не найдена, проверьте этот адрес в *urls.py*'
@@ -166,8 +165,6 @@ class Test04TitleAPI:
             'category': categories[1]['slug']
         }
         response = user_client.patch(f'/api/v1/titles/{titles[0]["id"]}/', data=data)
-        print('patch data>>>', data)
-
         assert response.status_code == 200, (
             'Проверьте, что при PATCH запросе `/api/v1/titles/{title_id}/` возвращается статус 200'
         )
@@ -177,7 +174,6 @@ class Test04TitleAPI:
             'Значение `name` изменено.'
         )
         response = user_client.get(f'/api/v1/titles/{titles[0]["id"]}/')
-        print('response.json()', response.json())
         assert response.status_code == 200, (
             'Проверьте, что при GET запросе `/api/v1/titles/{title_id}/` '
             'без токена авторизации возвращается статус 200'

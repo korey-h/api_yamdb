@@ -1,4 +1,4 @@
-﻿from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -42,7 +42,6 @@ def create_categories(user_client):
         'slug': 'books'
     }
     user_client.post('/api/v1/categories/', data=data2)
-    print('тестовые категории',data1, data2)
     return [data1, data2]
 
 
@@ -66,14 +65,14 @@ def create_titles(user_client):
     result = []
     data = {'name': 'Поворот туда', 'year': 2000, 'genre': [genres[0]['slug'], genres[1]['slug']],
             'category': categories[0]['slug'], 'description': 'Крутое пике'}
-    print(data)
     response = user_client.post('/api/v1/titles/', data=data)
-    print(response.json())
+    print('responce>>>>>>>', response.json())
     data['id'] = response.json()['id']
     result.append(data)
     data = {'name': 'Проект', 'year': 2020, 'genre': [genres[2]['slug']], 'category': categories[1]['slug'],
             'description': 'Главная драма года'}
     response = user_client.post('/api/v1/titles/', data=data)
+    print('responce>>>>>>>', response.json())
     data['id'] = response.json()['id']
     result.append(data)
     return result, categories, genres

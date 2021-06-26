@@ -6,7 +6,9 @@ from rest_framework.fields import EmailField
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import Categories, Comment, Genres, Review, Titles, User
+from .models import Categories, Comment, Genres, Review, Titles
+
+User = get_user_model()
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -64,9 +66,10 @@ class TitlesSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(many=True,
                                          queryset=Genres.objects.all(),
                                          slug_field='slug')
+    rating = serializers.FloatField(required=False)
 
     class Meta:
-        fields = ['name', 'year', 'category', 'genre', 'description', ]
+        fields = '__all__'
         model = Titles
         extra_kwargs = {'name': {'required': True}, }
 
