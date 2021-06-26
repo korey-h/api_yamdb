@@ -1,9 +1,12 @@
-import jwt.api_jwt
-
+import datetime as dt
 from datetime import datetime, timedelta
+
+import jwt.api_jwt
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
+
 from api_yamdb import settings
 
 
@@ -36,26 +39,41 @@ User = get_user_model()
 
 
 class Categories(models.Model):
-    name = models.TextField(verbose_name='Название категории')
+    name = models.TextField(verbose_name='Category name')
     slug = models.SlugField(unique=True)
 
 
 class Genres(models.Model):
-    name = models.TextField(verbose_name='Название жанра')
+    name = models.TextField(verbose_name='Genre name')
     slug = models.SlugField(unique=True)
 
 
+def validate_year(value):
+    current_year = dt.date.today().year
+    if value == 0 or value > current_year:
+        raise ValidationError(
+            'Wrong year'
+        )
+
+
 class Titles(models.Model):
-    name = models.TextField(verbose_name='Название произведения')
-    year = models.PositiveSmallIntegerField(null=True, blank=True)
-    category = models.ForeignKey(Categories, on_delete=models.CASCADE,
-                                 null=True, blank=True, related_name='titles')
-    genre = models.ManyToManyField(Genres,
-                                   blank=True,
-                                   related_name='genres')
-    description = models.TextField(null=True, blank=True,
-                                   verbose_name='Описание')
-    rating = models.FloatField(default=None, null=True, blank=True, )
+    name = models.TextField(verbose_name='Title name')
+    year = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        validators=[validate_year], verbose_name='Release date'
+    )
+    category = models.ForeignKey(
+        Categories, on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name="titles", verbose_name='Category'
+    )
+    genre = models.ManyToManyField(
+        Genres, null=True, blank=True,
+        related_name="genres", verbose_name='Genre'
+    )
+    description = models.TextField(
+        null=True, blank=True, verbose_name='Description'
+    )
 
 
 class Review(models.Model):

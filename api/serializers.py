@@ -1,3 +1,4 @@
+
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -64,6 +65,7 @@ class TitlesSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(many=True,
                                          queryset=Genres.objects.all(),
                                          slug_field='slug')
+    rating = serializers.FloatField(required=False)
 
     class Meta:
         fields = '__all__'
