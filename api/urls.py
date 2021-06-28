@@ -14,11 +14,13 @@ router_v1.register(
     r'titles/(?P<title_id>[^/.]+)/reviews/(?P<review_id>[^/.]+)/comments',
     views.CommentViewSet, basename='comment')
 router_v1.register('users', views.UserView, basename='users')
-
+url_auth = [
+    path('auth/token/', MyTokenObtainPairView.as_view(),
+         name='token_obtain_pair'),
+    path('auth/email/', views.SendConfirmEmailView.as_view())
+]
 
 urlpatterns = [
-    path('v1/auth/token/', MyTokenObtainPairView.as_view(),
-         name='token_obtain_pair'),
-    path('v1/auth/email/', views.SendConfirmEmailView.as_view()),
+    path('v1/', include(url_auth)),
     path('v1/', include(router_v1.urls)),
 ]

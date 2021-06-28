@@ -8,6 +8,8 @@ from django.db import models
 
 from .validators import validate_year
 
+SCORE_MESSAGE = 'Оценка должна быть в диапазоне от 1 до 10'
+
 
 class Roles(models.TextChoices):
     ADMIN = 'admin'
@@ -26,7 +28,7 @@ class CustomUser(AbstractUser):
     role = models.CharField(
         max_length=12,
         choices=Roles.choices,
-        default='user',
+        default=Roles.USER,
         verbose_name='Уровень прав пользователя'
     )
 
@@ -34,6 +36,9 @@ class CustomUser(AbstractUser):
         dt = datetime.now() + timedelta(days=1)
         return jwt.encode(payload={'id': self.pk, 'exp': dt.toordinal()},
                           key=settings.SECRET_KEY, algorithm='HS256')
+
+    def is_admin(self):
+        return self.role == Roles.ADMIN or self.is_staff or self.is_superuser
 
 
 class Categories(models.Model):
@@ -73,7 +78,6 @@ class Titles(models.Model):
 
 
 class Review(models.Model):
-    MESSAGE = 'Оценка должна быть в диапазоне от 1 до 10'
     title = models.ForeignKey(
         Titles,
         on_delete=models.CASCADE,
@@ -90,8 +94,8 @@ class Review(models.Model):
     score = models.PositiveSmallIntegerField(
         verbose_name='Оценка',
         validators=[
-            MinValueValidator(1, message=MESSAGE),
-            MaxValueValidator(10, message=MESSAGE)
+            MinValueValidator(1, message=SCORE_MESSAGE),
+            MaxValueValidator(10, message=SCORE_MESSAGE)
         ]
     )
     pub_date = models.DateTimeField(

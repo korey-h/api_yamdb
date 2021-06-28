@@ -148,5 +148,4 @@ SIMPLE_JWT = {
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
-EMAIL_FROM = 'auth@yambdb.com'
-EMAIL_BCC = 'auth@yambdb.com'
+DEFAULT_FROM_EMAIL = 'auth@yambdb.com'

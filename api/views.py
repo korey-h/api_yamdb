@@ -1,14 +1,12 @@
-import re
-
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, pagination, permissions, status
+from rest_framework import filters, mixins, pagination, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 from .filters import TitleFilter
 from .models import Categories, Genres, Review, Titles
@@ -27,27 +25,22 @@ class SendConfirmEmailView(APIView):
     permission_classes = []
 
     def post(self, request):
-        data = EmailSerializer(data=request.data)
-        if data.is_valid():
-            email = data.validated_data['email']
-            user = User.objects.get_or_create(email=email)
-            if user[0].username == '':
-                name = re.search(r'.*(?=@)', email)
-                setattr(user[0], 'username', name[0])
-                user[0].save()
-            confirmation_code = user[0]._gen_confirm_code()
-            message = (f'confirmation_code: {confirmation_code}')
-            destination = email
-            send_mail(
-                'e-mail confirmation',
-                message,
-                'auth@yambdb.com',
-                [destination, ],
-                fail_silently=False,
-            )
-            return Response({'detail': 'email was sent'},
-                            status=status.HTTP_200_OK)
-        return Response(data=data.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = EmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        username = serializer.validated_data['username']
+        user = User.objects.get_or_create(email=email, username=username)[0]
+        confirmation_code = user._gen_confirm_code()
+        message = (f'confirmation_code: {confirmation_code}')
+        send_mail(
+            subject='e-mail confirmation',
+            message=message,
+            from_email=None,  # settings.DEFAULT_FROM_EMAIL will be used
+            recipient_list=[],
+            fail_silently=False,
+        )
+        return Response({'detail': 'email was sent'},
+                        status=status.HTTP_200_OK)
 
 
 class UserView(ModelViewSet):
@@ -70,14 +63,17 @@ class UserView(ModelViewSet):
         serializer = UserSerializer(self.request.user, data=request.data,
                                     partial=True)
         serializer.is_valid(raise_exception=True)
-        serializer.validated_data['role'] = self.request.user.role
-        serializer.save()
+        serializer.save(role=self.request.user.role)
         return Response(serializer.data)
 
 
-class CategoriesView(ModelViewSet):
+class GetPostDelMixin(mixins.CreateModelMixin, mixins.ListModelMixin,
+                      mixins.DestroyModelMixin, GenericViewSet):
+    pass
+
+
+class CategoriesView(GetPostDelMixin):
     queryset = Categories.objects.all()
-    http_method_names = ['get', 'post', ]
     serializer_class = CategoriesSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsAdminOrReadOnly]
@@ -87,15 +83,9 @@ class CategoriesView(ModelViewSet):
     lookup_field = 'slug'
     lookup_url_kwarg = 'slug'
 
-    def _allowed_methods(self):
-        if self.kwargs != {}:
-            self.http_method_names = ['delete', ]
-        return super()._allowed_methods()
 
-
-class GenreViews(ModelViewSet):
+class GenreViews(GetPostDelMixin):
     queryset = Genres.objects.all()
-    http_method_names = ['get', 'post', ]
     serializer_class = GenresSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsAdminOrReadOnly]
@@ -105,15 +95,9 @@ class GenreViews(ModelViewSet):
     lookup_field = 'slug'
     lookup_url_kwarg = 'slug'
 
-    def _allowed_methods(self):
-        if self.kwargs != {}:
-            self.http_method_names = ['delete', ]
-        return super()._allowed_methods()
-
 
 class TitleViews(ModelViewSet):
     queryset = Titles.objects.annotate(rating=Avg('reviews__score'))
-    http_method_names = ['get', 'post', 'patch', 'delete']
     serializer_class = TitlesSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly,
                           IsAdminOrReadOnly]
@@ -128,10 +112,6 @@ class ReviewViewSet(ModelViewSet):
     pagination_class = pagination.PageNumberPagination
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Titles, id=self.kwargs['title_id'])
-        serializer.save(title=title, author=self.request.user)
-
-    def perform_update(self, serializer):
         title = get_object_or_404(Titles, id=self.kwargs['title_id'])
         serializer.save(title=title, author=self.request.user)
 

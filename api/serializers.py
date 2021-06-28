@@ -12,22 +12,19 @@ User = get_user_model()
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    username_field = get_user_model().EMAIL_FIELD
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['confirmation_code'] = serializers.CharField(required=True)
-        self.fields.pop('password')
+        self.fields.pop('password', None)
 
     def validate(self, attrs):
         self.user = get_object_or_404(User,
                                       email=attrs[self.username_field])
-        data = {}
         if not self.user._gen_confirm_code() == attrs['confirmation_code']:
             raise ParseError(detail='Confirmation code is wrong or expired.')
         refresh = super().get_token(self.user)
-        data['token'] = str(refresh.access_token)
-        return data
+        return {'token': str(refresh.access_token)}
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -36,6 +33,7 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 class EmailSerializer(serializers.Serializer):
     email = EmailField(required=True)
+    username = serializers.CharField(max_length=50, required=True)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -71,7 +69,6 @@ class TitlesSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Titles
-        extra_kwargs = {'name': {'required': True}, }
 
     def to_representation(self, obj):
         self.fields['category'] = CategoriesSerializer()
@@ -90,12 +87,13 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     def validate(self, data):
-        if self.context['request'].method == 'POST':
-            author = self.context['request'].user
-            title = self.context['view'].kwargs['title_id']
-            review = Review.objects.filter(author=author, title=title).exists()
-            if review:
-                raise ValidationError('Вы уже оставили свой отзыв')
+        if self.context['request'].method != 'POST':
+            return data
+        author = self.context['request'].user
+        title = self.context['view'].kwargs['title_id']
+        review = Review.objects.filter(author=author, title=title)
+        if review.exists():
+            raise ValidationError('Вы уже оставили свой отзыв')
         return data
 
     class Meta:
