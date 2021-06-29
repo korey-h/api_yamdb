@@ -15,12 +15,12 @@ router_v1.register(
     views.CommentViewSet, basename='comment')
 router_v1.register('users', views.UserView, basename='users')
 url_auth = [
-    path('auth/token/', MyTokenObtainPairView.as_view(),
+    path('token/', MyTokenObtainPairView.as_view(),
          name='token_obtain_pair'),
-    path('auth/email/', views.SendConfirmEmailView.as_view())
+    path('email/', views.SendConfirmEmailView.as_view())
 ]
 
 urlpatterns = [
-    path('v1/', include(url_auth)),
+    path('v1/auth/', include(url_auth)),
     path('v1/', include(router_v1.urls)),
 ]

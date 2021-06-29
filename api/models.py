@@ -37,6 +37,7 @@ class CustomUser(AbstractUser):
         return jwt.encode(payload={'id': self.pk, 'exp': dt.toordinal()},
                           key=settings.SECRET_KEY, algorithm='HS256')
 
+    @property
     def is_admin(self):
         return self.role == Roles.ADMIN or self.is_staff or self.is_superuser
 

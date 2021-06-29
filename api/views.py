@@ -1,3 +1,4 @@
+from api_yamdb.settings import DEFAULT_FROM_EMAIL
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.db.models import Avg
@@ -35,7 +36,7 @@ class SendConfirmEmailView(APIView):
         send_mail(
             subject='e-mail confirmation',
             message=message,
-            from_email=None,  # settings.DEFAULT_FROM_EMAIL will be used
+            from_email=DEFAULT_FROM_EMAIL,
             recipient_list=[],
             fail_silently=False,
         )
